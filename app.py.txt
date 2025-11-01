@@ -1,0 +1,27 @@
+from fastapi import FastAPI, HTTPException, Query
+from fastapi.responses import FileResponse
+import csv
+import tempfile
+
+app = FastAPI()
+
+API_KEY = "12345abcdef"
+
+@app.get("/generate-report")
+def generate_report(api_key: str = Query(None)):
+    if api_key != API_KEY:
+        raise HTTPException(status_code=401, detail="Invalid or missing API key")
+
+    temp = tempfile.NamedTemporaryFile(delete=False, suffix=".csv")
+    with open(temp.name, mode='w', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow(["Name", "Sales", "Region"])
+        writer.writerow(["Alice", 1000, "North"])
+        writer.writerow(["Bob", 850, "East"])
+        writer.writerow(["Charlie", 1200, "West"])
+
+    return FileResponse(
+        temp.name,
+        media_type='text/csv',
+        filename='sales_report.csv'
+    )
